@@ -1,13 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
+
 
 public class LevelManager : MonoBehaviour
 {
     [Header("Game Reference")]
     private LevelErrorGenerator EG;
-    [HideInInspector] public bool isPlaying = false;
+    [SerializeField] private GameObject articleScrollView;
+    public bool isPlaying = false;
     public float _timeRemaining = 120f;
     public float timeRemaining
     {
@@ -25,20 +28,33 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text errorText;
 
+    [Header("EndCard Reference")]
+    [SerializeField] private TMP_Text endErrorText;
+    [SerializeField] private TMP_Text endTitleText;
+    [SerializeField] private GameObject endCardGroup;
+
 
     private void Start()
     {
         EG = GetComponent<LevelErrorGenerator>();
 
-        PlayGame();
+        //--DEBUG ONLY-- PlayGame();
     }
 
 
     private void Update()
     {
-        if (isPlaying && timeRemaining > 0)
+        if (isPlaying)
         {
-            timeRemaining -= Time.deltaTime;
+            if (timeRemaining > 0 && errorCount != errorFound)
+            {
+                timeRemaining -= Time.deltaTime;
+            }
+            else
+            {
+                EndGame();
+            }
+
         }
     }
 
@@ -49,17 +65,37 @@ public class LevelManager : MonoBehaviour
         errorCount = EG.entireErrorCount;
         errorFound = 0;
 
-        isPlaying = true;
+        timeRemaining = 120f;
+
+        //isPlaying = true;
     }
 
     public void RestartGame()
     {
+        EG.InitializeErrorGeneration();
 
+        errorCount = EG.entireErrorCount;
+        errorFound = 0;
+
+        timeRemaining = 120f;
+        isPlaying = true;
+        endCardGroup.SetActive(false);
+    }
+
+    public void ExitGame()
+    {
+        endCardGroup.SetActive(false);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void EndGame()
     {
-
+        isPlaying = false;
+        articleScrollView.SetActive(false);
+        endCardGroup.SetActive(true);
+        endTitleText.text = EG.articleTitle.text;
+        endErrorText.text = _errorFound + "/" + errorCount;
+        // endTitleText.text = "\"" + EG
     }
 
     private void DisplayTime(float timeToDisplay)

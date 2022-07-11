@@ -4,32 +4,58 @@ using System.Text;
 using UnityEngine;
 using TMPro;
 
-public class CheckWordTouched : MonoBehaviour
+public class ReviewWordTouched : MonoBehaviour
 {
-
     [Header("TextMeshPro Reference")]
-    private TMP_Text articleText;
+    [SerializeField] private TMP_Text articleText;
+    [SerializeField] private TMP_Text errorGeneratedText;
     [SerializeField] private int selectedWord = -1;
 
     [Header("Game Reference")]
     [SerializeField] private LevelErrorGenerator EG;
     [SerializeField] private LevelManager LM;
     [SerializeField] private float deltaTouchErrorMagnitude = 0.25f;
-
-    private List<int> wordTouched = new List<int>();
     Vector3 lastMousePos;
+    [SerializeField] private List<string> errorTextList = new List<string>();
+
     [Header("Correction Reference")]
     [SerializeField] private CanvasGroup correctionPanel;
     [SerializeField] private TMP_Text errorTypeText, correctionText;
     private AudioSource correctionAudio;
-    [SerializeField] private AudioClip[] correctionSounds;
     private Camera cam;
 
-    private void Start()
+    public void InitializeReview()
     {
-        articleText = GetComponent<TMP_Text>();
         cam = Camera.main;
-        correctionAudio = GetComponent<AudioSource>();
+
+        articleText.text = errorGeneratedText.text;
+        articleText.ForceMeshUpdate();
+        foreach (var errorIndex in EG.textErrorIndexes)
+        {
+            articleText.ForceMeshUpdate();
+            errorTextList.Add(articleText.textInfo.wordInfo[errorIndex].GetWord());
+            if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(errorIndex)] == ErrorType.TITIK_KOMA)
+            {
+                ErrorCorrection(EG.articleErrorTextArray[errorIndex], errorIndex);
+            }
+            else if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(errorIndex)] == ErrorType.KAPITAL)
+            {
+                articleText.ForceMeshUpdate();
+                StringBuilder sb = new StringBuilder(articleText.text);
+                char checkCapital = articleText.text[articleText.textInfo.wordInfo[errorIndex].firstCharacterIndex];
+                sb[articleText.textInfo.wordInfo[errorIndex].firstCharacterIndex] = char.ToUpper(checkCapital);
+                articleText.text = sb.ToString();
+                articleText.ForceMeshUpdate();
+            }
+            else
+            {
+                ErrorCorrection(articleText.textInfo.wordInfo[errorIndex].GetWord(), errorIndex);
+            }
+
+        }
+        articleText.ForceMeshUpdate();
+        UpdateWordColor();
+
     }
 
     private void Update()
@@ -72,33 +98,11 @@ public class CheckWordTouched : MonoBehaviour
 
             TMP_WordInfo wInfo = articleText.textInfo.wordInfo[wordIndex];
 
-            if (EG.textErrorIndexes.Contains(wordIndex) && !wordTouched.Contains(wordIndex))
+            if (EG.textErrorIndexes.Contains(wordIndex))
             {
-                LM.errorFound++;
-                wordTouched.Add(wordIndex);
 
                 Debug.Log("Error Word : " + wInfo.GetWord() + ", correct word : " + EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)] + ", error type : " + EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
                 CorrectionFeedbackPrompt(wInfo.GetWord(), EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)], EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
-
-                if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.TITIK_KOMA)
-                {
-                    ErrorCorrection(EG.articleErrorTextArray[wordIndex], wordIndex);
-                }
-                else if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.KAPITAL)
-                {
-                    articleText.ForceMeshUpdate();
-                    StringBuilder sb = new StringBuilder(articleText.text);
-                    char checkCapital = articleText.text[wInfo.firstCharacterIndex];
-                    sb[wInfo.firstCharacterIndex] = char.ToUpper(checkCapital);
-                    articleText.text = sb.ToString();
-                    articleText.ForceMeshUpdate();
-                }
-                else
-                {
-                    ErrorCorrection(wInfo.GetWord(), wordIndex);
-                }
-                correctionAudio.clip = correctionSounds[0];
-                correctionAudio.Play();
 
             }
             else
@@ -106,11 +110,6 @@ public class CheckWordTouched : MonoBehaviour
                 // Mengoutput kata yang terambil beserta indeksnya ke console
                 Debug.Log("Clicked Text : " + wInfo.GetWord() + ", at index : " + wordIndex);
 
-                //Kurangi waktu
-                LM.timeRemaining -= 5f;
-
-                correctionAudio.clip = correctionSounds[1];
-                correctionAudio.Play();
             }
         }
     }
@@ -121,32 +120,6 @@ public class CheckWordTouched : MonoBehaviour
         articleText.text = articleText.text.Replace(oldString, EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)]);
 
         articleText.ForceMeshUpdate();
-        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
-        UpdateWordColor();
-    }
-
-    private void UpdateWordColor()
-    {
-        // Debug.Log("Changed Color!");
-
-        foreach (var wordIndex in wordTouched)
-        {
-            TMP_WordInfo info = articleText.textInfo.wordInfo[wordIndex];
-            for (int i = 0; i < info.characterCount; ++i)
-            {
-                int charIndex = info.firstCharacterIndex + i;
-                int meshIndex = articleText.textInfo.characterInfo[charIndex].materialReferenceIndex;
-                int vertexIndex = articleText.textInfo.characterInfo[charIndex].vertexIndex;
-
-                Color32[] vertexColors = articleText.textInfo.meshInfo[meshIndex].colors32;
-                Color32 myColor32 = new Color32(60, 200, 82, 255);
-                vertexColors[vertexIndex + 0] = myColor32;
-                vertexColors[vertexIndex + 1] = myColor32;
-                vertexColors[vertexIndex + 2] = myColor32;
-                vertexColors[vertexIndex + 3] = myColor32;
-            }
-        }
-        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 
     private void CorrectionFeedbackPrompt(string errorWord, string correctWord, ErrorType errType)
@@ -169,4 +142,27 @@ public class CheckWordTouched : MonoBehaviour
             .setEaseInOutSine();
     }
 
+    private void UpdateWordColor()
+    {
+        // Debug.Log("Changed Color!");
+
+        foreach (var wordIndex in EG.textErrorIndexes)
+        {
+            TMP_WordInfo info = articleText.textInfo.wordInfo[wordIndex];
+            for (int i = 0; i < info.characterCount; ++i)
+            {
+                int charIndex = info.firstCharacterIndex + i;
+                int meshIndex = articleText.textInfo.characterInfo[charIndex].materialReferenceIndex;
+                int vertexIndex = articleText.textInfo.characterInfo[charIndex].vertexIndex;
+
+                Color32[] vertexColors = articleText.textInfo.meshInfo[meshIndex].colors32;
+                Color32 myColor32 = new Color32(60, 200, 82, 255);
+                vertexColors[vertexIndex + 0] = myColor32;
+                vertexColors[vertexIndex + 1] = myColor32;
+                vertexColors[vertexIndex + 2] = myColor32;
+                vertexColors[vertexIndex + 3] = myColor32;
+            }
+        }
+        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+    }
 }

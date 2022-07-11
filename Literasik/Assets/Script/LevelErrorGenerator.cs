@@ -14,8 +14,8 @@ public enum ErrorType
 public class LevelErrorGenerator : MonoBehaviour
 {
     [Header("TextMeshPro Reference")]
-    [SerializeField] private TMP_Text articleText;
-    [SerializeField] private TMP_Text articleTitle;
+    public TMP_Text articleText;
+    public TMP_Text articleTitle;
     public List<string> articleTextArray, articleErrorTextArray;
     private Dictionary<string, string> articleDictionary = new Dictionary<string, string>();
     private List<int> articleJSONIndexList = new List<int>();
@@ -48,11 +48,16 @@ public class LevelErrorGenerator : MonoBehaviour
 
     public void InitializeErrorGeneration()
     {
+        //Reset Game
+
         //Pick article from JSON
         LoadDictionary("ArticleDictionaryJSON", articleDictionary);
         for (int i = 0; i < articleDictionary.Count; i++) articleJSONIndexList.Add(i);
 
+        //Pick random article
+        articlePickIndex = Random.Range(0, articleJSONIndexList.Count);
         PickArticle(articlePickIndex);
+        articleText.ForceMeshUpdate();
 
         //Insert article texts to list
         string[] articleTexttemp = articleText.text.Split(' ');
@@ -68,7 +73,7 @@ public class LevelErrorGenerator : MonoBehaviour
         CapitalErrorGeneration();
         //TikomaErrorGenerator();
 
-        entireErrorCount = typoErrorCount + capitalErrorCount + tikomaErrorCount;
+        entireErrorCount = textErrorIndexes.Count;
 
         //Insert error article texts to list
         articleTexttemp = articleText.text.Split(' ');
@@ -83,8 +88,6 @@ public class LevelErrorGenerator : MonoBehaviour
 
     private void PickArticle(int index)
     {
-        int rdm = Random.Range(0, articleJSONIndexList.Count);
-
         articleTitle.text = articleDictionary.ElementAt(articleJSONIndexList[index]).Key;
         articleText.text = articleDictionary.ElementAt(articleJSONIndexList[index]).Value;
         articleText.ForceMeshUpdate();
