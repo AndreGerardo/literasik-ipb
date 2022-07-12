@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Text;
 using UnityEngine;
 using TMPro;
@@ -45,6 +46,7 @@ public class CheckWordTouched : MonoBehaviour
         {
             float deltapos = Vector3.Distance(lastMousePos, Input.mousePosition);
             if (deltapos < deltaTouchErrorMagnitude) PickWord(Input.mousePosition);
+            UpdateWordColor();
         }
 
 
@@ -55,6 +57,7 @@ public class CheckWordTouched : MonoBehaviour
             if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude)
             {
                 PickWord(currentTouch.position);
+                UpdateWordColor();
             }
         }
     }
@@ -121,8 +124,8 @@ public class CheckWordTouched : MonoBehaviour
         articleText.text = articleText.text.Replace(oldString, EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)]);
 
         articleText.ForceMeshUpdate();
-        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         UpdateWordColor();
+        // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 
     private void UpdateWordColor()
@@ -145,8 +148,12 @@ public class CheckWordTouched : MonoBehaviour
                 vertexColors[vertexIndex + 2] = myColor32;
                 vertexColors[vertexIndex + 3] = myColor32;
             }
+
+            articleText.UpdateVertexData();
         }
-        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        // Thread.Sleep(100);
+
+
     }
 
     private void CorrectionFeedbackPrompt(string errorWord, string correctWord, ErrorType errType)

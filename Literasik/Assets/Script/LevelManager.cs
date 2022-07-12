@@ -58,9 +58,9 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    public void PlayGame()
+    public void PlayGame(int gameDifficulty)
     {
-        EG.InitializeErrorGeneration();
+        EG.InitializeErrorGeneration(gameDifficulty);
 
         errorCount = EG.entireErrorCount;
         errorFound = 0;
@@ -70,17 +70,17 @@ public class LevelManager : MonoBehaviour
         //isPlaying = true;
     }
 
-    public void RestartGame()
-    {
-        EG.InitializeErrorGeneration();
+    // public void RestartGame()
+    // {
+    //     EG.InitializeErrorGeneration();
 
-        errorCount = EG.entireErrorCount;
-        errorFound = 0;
+    //     errorCount = EG.entireErrorCount;
+    //     errorFound = 0;
 
-        timeRemaining = 120f;
-        isPlaying = true;
-        endCardGroup.SetActive(false);
-    }
+    //     timeRemaining = 120f;
+    //     isPlaying = true;
+    //     endCardGroup.SetActive(false);
+    // }
 
     public void ExitGame()
     {

@@ -25,6 +25,7 @@ public class LevelErrorGenerator : MonoBehaviour
     public List<int> textErrorIndexes = new List<int>();
     public List<ErrorType> errorTypesIndexes = new List<ErrorType>();
     public List<string> correctTextIndexs = new List<string>();
+    public List<string> errorTextList = new List<string>();
     public int entireErrorCount;
 
     [Header("Typo Error Configuration")]
@@ -46,9 +47,10 @@ public class LevelErrorGenerator : MonoBehaviour
     [SerializeField] private int tikomaErrorCount;
     private int currentTikomaErrorCount = 0;
 
-    public void InitializeErrorGeneration()
+    public void InitializeErrorGeneration(int gameDifficulty)
     {
-        //Reset Game
+        //Choose Difficulty
+        DifficultySelection(gameDifficulty);
 
         //Pick article from JSON
         LoadDictionary("ArticleDictionaryJSON", articleDictionary);
@@ -75,6 +77,13 @@ public class LevelErrorGenerator : MonoBehaviour
 
         entireErrorCount = textErrorIndexes.Count;
 
+        //Insert String Text Error
+        for (int i = 0; i < entireErrorCount; i++)
+        {
+            int tmp = textErrorIndexes[i];
+            errorTextList.Add(articleText.textInfo.wordInfo[tmp].GetWord());
+        }
+
         //Insert error article texts to list
         articleTexttemp = articleText.text.Split(' ');
         articleErrorTextArray = new List<string>(articleTexttemp);
@@ -82,6 +91,16 @@ public class LevelErrorGenerator : MonoBehaviour
         for (int i = 0; i < articleErrorTextArray.Count; i++)
         {
             if (articleErrorTextArray[i] == string.Empty) articleErrorTextArray.RemoveAt(i);
+        }
+    }
+
+    private void DifficultySelection(int diffIndex)
+    {
+        switch (diffIndex)
+        {
+            case 0: typoErrorCount = 2; capitalErrorCount = 2; break;
+            case 1: typoErrorCount = 3; capitalErrorCount = 4; break;
+            case 2: typoErrorCount = 8; capitalErrorCount = 2; break;
         }
     }
 

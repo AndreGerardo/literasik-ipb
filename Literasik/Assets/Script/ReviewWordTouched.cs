@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Text;
 using UnityEngine;
 using TMPro;
@@ -24,7 +25,7 @@ public class ReviewWordTouched : MonoBehaviour
     private AudioSource correctionAudio;
     private Camera cam;
 
-    public void InitializeReview()
+    public void OnEnable()
     {
         cam = Camera.main;
 
@@ -51,11 +52,11 @@ public class ReviewWordTouched : MonoBehaviour
             {
                 ErrorCorrection(articleText.textInfo.wordInfo[errorIndex].GetWord(), errorIndex);
             }
-
+            UpdateWordColor();
         }
-        articleText.ForceMeshUpdate();
-        UpdateWordColor();
-
+        // Thread.Sleep(100);
+        // UpdateWordColor();
+        // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 
     private void Update()
@@ -102,7 +103,7 @@ public class ReviewWordTouched : MonoBehaviour
             {
 
                 Debug.Log("Error Word : " + wInfo.GetWord() + ", correct word : " + EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)] + ", error type : " + EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
-                CorrectionFeedbackPrompt(wInfo.GetWord(), EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)], EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
+                CorrectionFeedbackPrompt(EG.errorTextList[EG.textErrorIndexes.IndexOf(wordIndex)], EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)], EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
 
             }
             else
@@ -120,6 +121,7 @@ public class ReviewWordTouched : MonoBehaviour
         articleText.text = articleText.text.Replace(oldString, EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)]);
 
         articleText.ForceMeshUpdate();
+        UpdateWordColor();
     }
 
     private void CorrectionFeedbackPrompt(string errorWord, string correctWord, ErrorType errType)
@@ -142,7 +144,7 @@ public class ReviewWordTouched : MonoBehaviour
             .setEaseInOutSine();
     }
 
-    private void UpdateWordColor()
+    public void UpdateWordColor()
     {
         // Debug.Log("Changed Color!");
 
@@ -163,6 +165,8 @@ public class ReviewWordTouched : MonoBehaviour
                 vertexColors[vertexIndex + 3] = myColor32;
             }
         }
-        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        // Thread.Sleep(100);
+        articleText.UpdateVertexData();
+
     }
 }

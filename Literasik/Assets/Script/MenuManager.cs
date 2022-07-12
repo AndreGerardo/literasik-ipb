@@ -45,7 +45,7 @@ public class MenuManager : MonoBehaviour
             .setOnComplete(() =>
             {
                 articleScrollView.SetActive(true);
-                LM.PlayGame();
+                LM.PlayGame(currentGameModeIndex);
                 // RM.InitializeReview();
             });
 
