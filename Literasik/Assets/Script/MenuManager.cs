@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -46,7 +44,7 @@ public class MenuManager : MonoBehaviour
             {
                 articleScrollView.SetActive(true);
                 LM.PlayGame(currentGameModeIndex);
-                // RM.InitializeReview();
+                RM.InitializeReview();
             });
 
         //MoveGameIn
@@ -69,10 +67,10 @@ public class MenuManager : MonoBehaviour
             .setEaseInOutSine();
     }
 
-    public void OptionSequence()
-    {
+    // public void OptionSequence()
+    // {
 
-    }
+    // }
 
     public void ChangeGameMode(bool isRight)
     {

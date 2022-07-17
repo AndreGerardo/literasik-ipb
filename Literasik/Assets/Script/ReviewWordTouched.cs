@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-using System.Text;
 using UnityEngine;
 using TMPro;
 
@@ -16,8 +12,8 @@ public class ReviewWordTouched : MonoBehaviour
     [SerializeField] private LevelErrorGenerator EG;
     [SerializeField] private LevelManager LM;
     [SerializeField] private float deltaTouchErrorMagnitude = 0.25f;
+    [SerializeField] private GameObject reviewGroup;
     Vector3 lastMousePos;
-    [SerializeField] private List<string> errorTextList = new List<string>();
 
     [Header("Correction Reference")]
     [SerializeField] private CanvasGroup correctionPanel;
@@ -25,38 +21,35 @@ public class ReviewWordTouched : MonoBehaviour
     private AudioSource correctionAudio;
     private Camera cam;
 
-    public void OnEnable()
+    public void InitializeReview()
     {
         cam = Camera.main;
 
         articleText.text = errorGeneratedText.text;
         articleText.ForceMeshUpdate();
-        foreach (var errorIndex in EG.textErrorIndexes)
-        {
-            articleText.ForceMeshUpdate();
-            errorTextList.Add(articleText.textInfo.wordInfo[errorIndex].GetWord());
-            if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(errorIndex)] == ErrorType.TITIK_KOMA)
-            {
-                ErrorCorrection(EG.articleErrorTextArray[errorIndex], errorIndex);
-            }
-            else if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(errorIndex)] == ErrorType.KAPITAL)
-            {
-                articleText.ForceMeshUpdate();
-                StringBuilder sb = new StringBuilder(articleText.text);
-                char checkCapital = articleText.text[articleText.textInfo.wordInfo[errorIndex].firstCharacterIndex];
-                sb[articleText.textInfo.wordInfo[errorIndex].firstCharacterIndex] = char.ToUpper(checkCapital);
-                articleText.text = sb.ToString();
-                articleText.ForceMeshUpdate();
-            }
-            else
-            {
-                ErrorCorrection(articleText.textInfo.wordInfo[errorIndex].GetWord(), errorIndex);
-            }
-            UpdateWordColor();
-        }
         // Thread.Sleep(100);
-        // UpdateWordColor();
+        UpdateWordColor();
         // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        reviewGroup.GetComponent<CanvasGroup>().alpha = 0f;
+        reviewGroup.GetComponent<CanvasGroup>().blocksRaycasts = false;
+        reviewGroup.GetComponent<CanvasGroup>().interactable = false;
+        // articleText.ForceMeshUpdate();
+        // UpdateWordColor();
+    }
+
+    void OnEnable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
+    }
+    void OnDisable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(ON_TEXT_CHANGED);
+    }
+
+
+    void ON_TEXT_CHANGED(Object obj)
+    {
+        UpdateWordColor();
     }
 
     private void Update()
@@ -115,14 +108,6 @@ public class ReviewWordTouched : MonoBehaviour
         }
     }
 
-    private void ErrorCorrection(string oldString, int wordIndex)
-    {
-        Debug.Log("Corrected Error!");
-        articleText.text = articleText.text.Replace(oldString, EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)]);
-
-        articleText.ForceMeshUpdate();
-        UpdateWordColor();
-    }
 
     private void CorrectionFeedbackPrompt(string errorWord, string correctWord, ErrorType errType)
     {
@@ -151,6 +136,7 @@ public class ReviewWordTouched : MonoBehaviour
         foreach (var wordIndex in EG.textErrorIndexes)
         {
             TMP_WordInfo info = articleText.textInfo.wordInfo[wordIndex];
+            // Debug.Log("UpdatedColor: " + info.GetWord());
             for (int i = 0; i < info.characterCount; ++i)
             {
                 int charIndex = info.firstCharacterIndex + i;
@@ -163,10 +149,12 @@ public class ReviewWordTouched : MonoBehaviour
                 vertexColors[vertexIndex + 1] = myColor32;
                 vertexColors[vertexIndex + 2] = myColor32;
                 vertexColors[vertexIndex + 3] = myColor32;
+
+                articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+
             }
         }
         // Thread.Sleep(100);
-        articleText.UpdateVertexData();
-
+        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 }

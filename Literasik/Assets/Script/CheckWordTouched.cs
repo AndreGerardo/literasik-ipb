@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using System.Text;
 using UnityEngine;
 using TMPro;
@@ -26,11 +24,28 @@ public class CheckWordTouched : MonoBehaviour
     [SerializeField] private AudioClip[] correctionSounds;
     private Camera cam;
 
+    // void OnEnable()
+    // {
+    //     TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
+    // }
+    void OnDisable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(ON_TEXT_CHANGED);
+    }
+
+
+    void ON_TEXT_CHANGED(Object obj)
+    {
+        UpdateWordColor();
+    }
+
     private void Start()
     {
         articleText = GetComponent<TMP_Text>();
         cam = Camera.main;
         correctionAudio = GetComponent<AudioSource>();
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
+
     }
 
     private void Update()
@@ -46,7 +61,7 @@ public class CheckWordTouched : MonoBehaviour
         {
             float deltapos = Vector3.Distance(lastMousePos, Input.mousePosition);
             if (deltapos < deltaTouchErrorMagnitude) PickWord(Input.mousePosition);
-            UpdateWordColor();
+            // UpdateWordColor();
         }
 
 
@@ -57,9 +72,12 @@ public class CheckWordTouched : MonoBehaviour
             if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude)
             {
                 PickWord(currentTouch.position);
-                UpdateWordColor();
+                // UpdateWordColor();
             }
         }
+
+        // Debugging
+        if (Input.GetKeyDown(KeyCode.E) && LM.isPlaying) LM.timeRemaining -= 120f;
     }
 
     // Fungsi untuk mengambil kata yang ditekan
@@ -89,17 +107,22 @@ public class CheckWordTouched : MonoBehaviour
                 }
                 else if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.KAPITAL)
                 {
-                    articleText.ForceMeshUpdate();
+
                     StringBuilder sb = new StringBuilder(articleText.text);
                     char checkCapital = articleText.text[wInfo.firstCharacterIndex];
                     sb[wInfo.firstCharacterIndex] = char.ToUpper(checkCapital);
                     articleText.text = sb.ToString();
                     articleText.ForceMeshUpdate();
+
                 }
                 else
                 {
                     ErrorCorrection(wInfo.GetWord(), wordIndex);
                 }
+
+                // UpdateWordColor();
+                articleText.ForceMeshUpdate();
+
                 correctionAudio.clip = correctionSounds[0];
                 correctionAudio.Play();
 
@@ -122,9 +145,10 @@ public class CheckWordTouched : MonoBehaviour
     {
         Debug.Log("Corrected Error!");
         articleText.text = articleText.text.Replace(oldString, EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)]);
-
         articleText.ForceMeshUpdate();
+
         UpdateWordColor();
+        articleText.ForceMeshUpdate();
         // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 
@@ -147,13 +171,12 @@ public class CheckWordTouched : MonoBehaviour
                 vertexColors[vertexIndex + 1] = myColor32;
                 vertexColors[vertexIndex + 2] = myColor32;
                 vertexColors[vertexIndex + 3] = myColor32;
+
+                // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
             }
-
-            articleText.UpdateVertexData();
         }
+        articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         // Thread.Sleep(100);
-
-
     }
 
     private void CorrectionFeedbackPrompt(string errorWord, string correctWord, ErrorType errType)
