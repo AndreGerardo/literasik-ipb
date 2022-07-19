@@ -20,6 +20,7 @@ public class CheckWordTouched : MonoBehaviour
     [Header("Correction Reference")]
     [SerializeField] private CanvasGroup correctionPanel;
     [SerializeField] private TMP_Text errorTypeText, correctionText;
+    bool canTouch = true;
     private AudioSource correctionAudio;
     [SerializeField] private AudioClip[] correctionSounds;
     private Camera cam;
@@ -61,7 +62,6 @@ public class CheckWordTouched : MonoBehaviour
         {
             float deltapos = Vector3.Distance(lastMousePos, Input.mousePosition);
             if (deltapos < deltaTouchErrorMagnitude) PickWord(Input.mousePosition);
-            // UpdateWordColor();
         }
 
 
@@ -72,7 +72,6 @@ public class CheckWordTouched : MonoBehaviour
             if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude)
             {
                 PickWord(currentTouch.position);
-                // UpdateWordColor();
             }
         }
 
@@ -93,8 +92,9 @@ public class CheckWordTouched : MonoBehaviour
 
             TMP_WordInfo wInfo = articleText.textInfo.wordInfo[wordIndex];
 
-            if (EG.textErrorIndexes.Contains(wordIndex) && !wordTouched.Contains(wordIndex))
+            if (EG.textErrorIndexes.Contains(wordIndex) && !wordTouched.Contains(wordIndex) && canTouch)
             {
+                canTouch = false;
                 LM.errorFound++;
                 wordTouched.Add(wordIndex);
 
@@ -103,7 +103,12 @@ public class CheckWordTouched : MonoBehaviour
 
                 if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.TITIK_KOMA)
                 {
-                    ErrorCorrection(EG.articleErrorTextArray[wordIndex], wordIndex);
+                    // ErrorCorrection(EG.articleErrorTextArray[wordIndex], wordIndex);
+                    string currentWord = EG.articleTextArray[wordIndex];
+                    int tokenPosition = (currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',')) + wInfo.firstCharacterIndex;
+                    EG.eraseCharList.Remove(tokenPosition);
+                    EG.undoEraseCharList.Add(tokenPosition);
+                    articleText.ForceMeshUpdate();
                 }
                 else if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.KAPITAL)
                 {
@@ -149,7 +154,6 @@ public class CheckWordTouched : MonoBehaviour
 
         UpdateWordColor();
         articleText.ForceMeshUpdate();
-        // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
 
     private void UpdateWordColor()
@@ -196,7 +200,8 @@ public class CheckWordTouched : MonoBehaviour
             .setEaseInOutSine();
         LeanTween.alphaCanvas(correctionPanel, 0f, 0.5f)
             .setDelay(1.5f)
-            .setEaseInOutSine();
+            .setEaseInOutSine()
+            .setOnComplete(() => canTouch = true);
     }
 
 }

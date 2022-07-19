@@ -18,6 +18,7 @@ public class ReviewWordTouched : MonoBehaviour
     [Header("Correction Reference")]
     [SerializeField] private CanvasGroup correctionPanel;
     [SerializeField] private TMP_Text errorTypeText, correctionText;
+    bool canTouch = true;
     private AudioSource correctionAudio;
     private Camera cam;
 
@@ -50,6 +51,7 @@ public class ReviewWordTouched : MonoBehaviour
     void ON_TEXT_CHANGED(Object obj)
     {
         UpdateWordColor();
+        EraseChar();
     }
 
     private void Update()
@@ -86,15 +88,16 @@ public class ReviewWordTouched : MonoBehaviour
         int wordIndex = TMP_TextUtilities.FindIntersectingWord(articleText, touchPos, cam);
 
         // Mengecek kalau belum ada kata yang ditekan
-        if (wordIndex != -1 && wordIndex != selectedWord)
+        if (wordIndex != -1)
         {
+
             selectedWord = wordIndex;
 
             TMP_WordInfo wInfo = articleText.textInfo.wordInfo[wordIndex];
 
-            if (EG.textErrorIndexes.Contains(wordIndex))
+            if (EG.textErrorIndexes.Contains(wordIndex) && canTouch)
             {
-
+                canTouch = false;
                 Debug.Log("Error Word : " + wInfo.GetWord() + ", correct word : " + EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)] + ", error type : " + EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
                 CorrectionFeedbackPrompt(EG.errorTextList[EG.textErrorIndexes.IndexOf(wordIndex)], EG.correctTextIndexs[EG.textErrorIndexes.IndexOf(wordIndex)], EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)]);
 
@@ -126,7 +129,8 @@ public class ReviewWordTouched : MonoBehaviour
             .setEaseInOutSine();
         LeanTween.alphaCanvas(correctionPanel, 0f, 0.5f)
             .setDelay(1.5f)
-            .setEaseInOutSine();
+            .setEaseInOutSine()
+            .setOnComplete(() => canTouch = true);
     }
 
     public void UpdateWordColor()
@@ -157,4 +161,26 @@ public class ReviewWordTouched : MonoBehaviour
         // Thread.Sleep(100);
         articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
     }
+
+    private void EraseChar()
+    {
+        // Debug.Log("Changed Color!");
+        if (EG.eraseCharList.Count > 0)
+        {
+            foreach (var charIndex in EG.eraseCharList)
+            {
+                int meshIndex = articleText.textInfo.characterInfo[charIndex].materialReferenceIndex;
+                int vertexIndex = articleText.textInfo.characterInfo[charIndex].vertexIndex;
+
+                Color32[] vertexColors = articleText.textInfo.meshInfo[meshIndex].colors32;
+                Color32 myColor32 = new Color32(0, 0, 0, 0);
+                vertexColors[vertexIndex + 0] = myColor32;
+                vertexColors[vertexIndex + 1] = myColor32;
+                vertexColors[vertexIndex + 2] = myColor32;
+                vertexColors[vertexIndex + 3] = myColor32;
+            }
+            articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        }
+    }
+
 }

@@ -42,13 +42,29 @@ public class LevelErrorGenerator : MonoBehaviour
     private int currentCapitalErrorCount = 0;
 
     [Header("Titik Koma Error Config")]
-    [SerializeField] private List<string> tikomaIgnoreWordList = new List<string>();
+    [SerializeField] private List<int> tikomaCharErrorLocation = new List<int>();
     [SerializeField] private float tikomaErrorRate = 0.1f;
     [SerializeField] private int tikomaErrorCount;
+    public List<int> tikomaErrorIndex = new List<int>();
     private int currentTikomaErrorCount = 0;
+    [HideInInspector] public List<int> eraseCharList = new List<int>();
+    [HideInInspector] public List<int> undoEraseCharList = new List<int>();
+
+
+    void OnDisable()
+    {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(ON_TEXT_CHANGED);
+    }
+
+
+    void ON_TEXT_CHANGED(Object obj)
+    {
+        EraseChar(); UndoEraseChar();
+    }
 
     public void InitializeErrorGeneration(int gameDifficulty)
     {
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
         //Choose Difficulty
         DifficultySelection(gameDifficulty);
 
@@ -73,7 +89,7 @@ public class LevelErrorGenerator : MonoBehaviour
         //Error Generation
         TypoGeneration();
         CapitalErrorGeneration();
-        //TikomaErrorGenerator();
+        TikomaErrorGenerator();
 
         entireErrorCount = textErrorIndexes.Count;
 
@@ -98,9 +114,9 @@ public class LevelErrorGenerator : MonoBehaviour
     {
         switch (diffIndex)
         {
-            case 0: typoErrorCount = 2; capitalErrorCount = 2; break;
-            case 1: typoErrorCount = 3; capitalErrorCount = 4; break;
-            case 2: typoErrorCount = 8; capitalErrorCount = 2; break;
+            case 0: typoErrorCount = 2; capitalErrorCount = 2; tikomaErrorCount = 1; break;
+            case 1: typoErrorCount = 4; capitalErrorCount = 4; tikomaErrorCount = 2; break;
+            case 2: typoErrorCount = 7; capitalErrorCount = 4; tikomaErrorCount = 3; break;
         }
     }
 
@@ -191,43 +207,88 @@ public class LevelErrorGenerator : MonoBehaviour
 
     private void TikomaErrorGenerator()
     {
+
         articleText.ForceMeshUpdate();
         // StringBuilder sb = new StringBuilder(articleText.text);
-        int counterTemp = articleText.textInfo.wordCount;
 
-        for (int i = 1; i < counterTemp; i++)
+        for (int i = 0; i < articleTextArray.Count; i++)
         {
             float rdm = Random.Range(0f, 1f);
             string currentWord = articleTextArray[i];
             TMP_WordInfo currentwInfo = articleText.textInfo.wordInfo[i];
-            if (!textErrorIndexes.Contains(i) && (currentWord.Contains(".") || currentWord.Contains(",")) && !tikomaIgnoreWordList.Contains(currentWord) && rdm > 1f - tikomaErrorRate)
+            if (!tikomaErrorIndex.Contains(i) && (currentWord.Contains(".") || currentWord.Contains(",")) && !tikomaCharErrorLocation.Contains(i) && rdm > 1f - tikomaErrorRate)
             {
                 //Error Algorithm
                 correctTextIndexs.Add(articleTextArray[i]);
                 textErrorIndexes.Add(i);
                 errorTypesIndexes.Add(ErrorType.TITIK_KOMA);
+                tikomaErrorIndex.Add(i);
 
-                int tokenPosition = currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',');
-                // sb[tokenPosition + currentwInfo.firstCharacterIndex] = '&';
-                articleText.text = articleText.text.Remove(tokenPosition + currentwInfo.firstCharacterIndex, 1);
+
+                int tokenPosition = (currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',')) + currentwInfo.firstCharacterIndex;
+                eraseCharList.Add(tokenPosition);
+                tikomaCharErrorLocation.Add(tokenPosition);
+
+                EraseChar();
+
                 currentTikomaErrorCount++;
                 articleText.ForceMeshUpdate();
 
-                if (articleText.textInfo.wordCount != counterTemp)
-                {
-                    counterTemp = articleText.textInfo.wordCount;
-                    i = 0;
-                }
             }
-
-            if (i == counterTemp - 1 && currentTikomaErrorCount < tikomaErrorCount) i = 0;
+            if (i == articleText.textInfo.wordCount - 1 && currentTikomaErrorCount < tikomaErrorCount) i = 0;
             if (currentTikomaErrorCount == tikomaErrorCount) break;
 
         }
         // articleText.text = sb.ToString();
 
         articleText.ForceMeshUpdate();
+
     }
+
+
+
+    private void EraseChar()
+    {
+        // Debug.Log("Changed Color!");
+        if (eraseCharList.Count > 0)
+        {
+            foreach (var charIndex in eraseCharList)
+            {
+                int meshIndex = articleText.textInfo.characterInfo[charIndex].materialReferenceIndex;
+                int vertexIndex = articleText.textInfo.characterInfo[charIndex].vertexIndex;
+
+                Color32[] vertexColors = articleText.textInfo.meshInfo[meshIndex].colors32;
+                Color32 myColor32 = new Color32(0, 0, 0, 0);
+                vertexColors[vertexIndex + 0] = myColor32;
+                vertexColors[vertexIndex + 1] = myColor32;
+                vertexColors[vertexIndex + 2] = myColor32;
+                vertexColors[vertexIndex + 3] = myColor32;
+            }
+            articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        }
+    }
+
+    private void UndoEraseChar()
+    {
+        // Debug.Log("Changed Color!");
+        if (undoEraseCharList.Count > 0)
+        {
+            foreach (var charIndex in undoEraseCharList)
+            {
+                int meshIndex = articleText.textInfo.characterInfo[charIndex].materialReferenceIndex;
+                int vertexIndex = articleText.textInfo.characterInfo[charIndex].vertexIndex;
+
+                Color32[] vertexColors = articleText.textInfo.meshInfo[meshIndex].colors32;
+                Color32 myColor32 = new Color32(60, 200, 82, 255);
+                vertexColors[vertexIndex + 0] = myColor32;
+                vertexColors[vertexIndex + 1] = myColor32;
+                vertexColors[vertexIndex + 2] = myColor32;
+                vertexColors[vertexIndex + 3] = myColor32;
+            }
+            articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        }
+    }
+
 
 
 }

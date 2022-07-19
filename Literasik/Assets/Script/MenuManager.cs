@@ -67,10 +67,6 @@ public class MenuManager : MonoBehaviour
             .setEaseInOutSine();
     }
 
-    // public void OptionSequence()
-    // {
-
-    // }
 
     public void ChangeGameMode(bool isRight)
     {
