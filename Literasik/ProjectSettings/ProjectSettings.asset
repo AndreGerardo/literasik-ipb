@@ -269,7 +269,14 @@ PlayerSettings:
   AndroidMinifyDebug: 0
   AndroidValidateAppBundleSize: 1
   AndroidAppBundleSizeToValidate: 150
-  m_BuildTargetIcons: []
+  m_BuildTargetIcons:
+  - m_BuildTarget: 
+    m_Icons:
+    - serializedVersion: 2
+      m_Icon: {fileID: 2800000, guid: 677b02f81e72ede4397c8592e2acd244, type: 3}
+      m_Width: 128
+      m_Height: 128
+      m_Kind: 0
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: Android
     m_Icons:
@@ -731,6 +738,7 @@ PlayerSettings:
   ps4videoRecordingFeaturesUsed: 0
   ps4contentSearchFeaturesUsed: 0
   ps4CompatibilityPS5: 0
+  ps4AllowPS5Detection: 0
   ps4GPU800MHz: 1
   ps4attribEyeToEyeDistanceSettingVR: 0
   ps4IncludedModules: []

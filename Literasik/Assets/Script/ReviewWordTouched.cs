@@ -13,6 +13,7 @@ public class ReviewWordTouched : MonoBehaviour
     [SerializeField] private LevelManager LM;
     [SerializeField] private float deltaTouchErrorMagnitude = 0.25f;
     [SerializeField] private GameObject reviewGroup;
+    private bool canReview = false;
     Vector3 lastMousePos;
 
     [Header("Correction Reference")]
@@ -31,6 +32,7 @@ public class ReviewWordTouched : MonoBehaviour
         // Thread.Sleep(100);
         UpdateWordColor();
         // articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
+        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
         reviewGroup.GetComponent<CanvasGroup>().alpha = 0f;
         reviewGroup.GetComponent<CanvasGroup>().blocksRaycasts = false;
         reviewGroup.GetComponent<CanvasGroup>().interactable = false;
@@ -38,10 +40,10 @@ public class ReviewWordTouched : MonoBehaviour
         // UpdateWordColor();
     }
 
-    void OnEnable()
-    {
-        TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
-    }
+    // void OnEnable()
+    // {
+    //     TMPro_EventManager.TEXT_CHANGED_EVENT.Add(ON_TEXT_CHANGED);
+    // }
     void OnDisable()
     {
         TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(ON_TEXT_CHANGED);
@@ -66,7 +68,7 @@ public class ReviewWordTouched : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             float deltapos = Vector3.Distance(lastMousePos, Input.mousePosition);
-            if (deltapos < deltaTouchErrorMagnitude) PickWord(Input.mousePosition);
+            if (deltapos < deltaTouchErrorMagnitude && canReview) PickWord(Input.mousePosition);
         }
 
 
@@ -74,7 +76,7 @@ public class ReviewWordTouched : MonoBehaviour
         if (Input.touchCount > 0)
         {
             Touch currentTouch = Input.GetTouch(0);
-            if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude)
+            if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude && canReview)
             {
                 PickWord(currentTouch.position);
             }
@@ -181,6 +183,11 @@ public class ReviewWordTouched : MonoBehaviour
             }
             articleText.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         }
+    }
+
+    public void EnableReview()
+    {
+        canReview = true;
     }
 
 }

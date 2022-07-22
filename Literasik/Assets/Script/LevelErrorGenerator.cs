@@ -47,7 +47,8 @@ public class LevelErrorGenerator : MonoBehaviour
     [SerializeField] private int tikomaErrorCount;
     public List<int> tikomaErrorIndex = new List<int>();
     private int currentTikomaErrorCount = 0;
-    [HideInInspector] public List<int> eraseCharList = new List<int>();
+    /*[HideInInspector]*/
+    public List<int> eraseCharList = new List<int>();
     [HideInInspector] public List<int> undoEraseCharList = new List<int>();
 
 
@@ -114,9 +115,9 @@ public class LevelErrorGenerator : MonoBehaviour
     {
         switch (diffIndex)
         {
-            case 0: typoErrorCount = 2; capitalErrorCount = 2; tikomaErrorCount = 1; break;
-            case 1: typoErrorCount = 4; capitalErrorCount = 4; tikomaErrorCount = 2; break;
-            case 2: typoErrorCount = 7; capitalErrorCount = 4; tikomaErrorCount = 3; break;
+            case 0: typoErrorCount = 2; capitalErrorCount = 2; tikomaErrorCount = 1; break; // DEFAULT 2 2 1
+            case 1: typoErrorCount = 4; capitalErrorCount = 4; tikomaErrorCount = 2; break; // DEFAULT 4 4 2
+            case 2: typoErrorCount = 7; capitalErrorCount = 4; tikomaErrorCount = 3; break; // DEFAULT 7 4 3
         }
     }
 
@@ -189,6 +190,7 @@ public class LevelErrorGenerator : MonoBehaviour
                     correctTextIndexs.Add(currentwInfo.GetWord());
                     textErrorIndexes.Add(i);
                     errorTypesIndexes.Add(ErrorType.KAPITAL);
+
                     sb[currentwInfo.firstCharacterIndex] = char.ToLower(checkCapital);
                     currentCapitalErrorCount++;
                 }
@@ -211,30 +213,47 @@ public class LevelErrorGenerator : MonoBehaviour
         articleText.ForceMeshUpdate();
         // StringBuilder sb = new StringBuilder(articleText.text);
 
-        for (int i = 0; i < articleTextArray.Count; i++)
+        for (int i = 0; i < articleText.textInfo.wordCount; i++)
         {
             float rdm = Random.Range(0f, 1f);
-            string currentWord = articleTextArray[i];
+
             TMP_WordInfo currentwInfo = articleText.textInfo.wordInfo[i];
-            if (!tikomaErrorIndex.Contains(i) && (currentWord.Contains(".") || currentWord.Contains(",")) && !tikomaCharErrorLocation.Contains(i) && rdm > 1f - tikomaErrorRate)
+
+            if (!tikomaErrorIndex.Contains(i) && !tikomaCharErrorLocation.Contains(i))
             {
-                //Error Algorithm
-                correctTextIndexs.Add(articleTextArray[i]);
-                textErrorIndexes.Add(i);
-                errorTypesIndexes.Add(ErrorType.TITIK_KOMA);
-                tikomaErrorIndex.Add(i);
+                char tikomaChecker = articleText.text[currentwInfo.lastCharacterIndex + 1];
+                char tokenChecker = ' ';
+                if (i != articleText.textInfo.wordCount - 1) tokenChecker = articleText.text[currentwInfo.lastCharacterIndex + 2];
 
+                if ((tikomaChecker.CompareTo('.') == 0 || tikomaChecker.CompareTo(',') == 0) && rdm > 1f - tikomaErrorRate)
+                {
 
-                int tokenPosition = (currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',')) + currentwInfo.firstCharacterIndex;
-                eraseCharList.Add(tokenPosition);
-                tikomaCharErrorLocation.Add(tokenPosition);
+                    correctTextIndexs.Add(currentwInfo.GetWord() + tikomaChecker);
+                    textErrorIndexes.Add(i);
+                    errorTypesIndexes.Add(ErrorType.TITIK_KOMA);
+                    if (tokenChecker.CompareTo(' ') == 0)
+                    {
+                        tikomaErrorIndex.Add(i);
+                        tikomaErrorIndex.Add(i + 1);
+                    }
+                    else
+                    {
+                        tikomaErrorIndex.Add(i);
+                    }
 
-                EraseChar();
+                    eraseCharList.Add(currentwInfo.lastCharacterIndex + 1);
+                    tikomaCharErrorLocation.Add(currentwInfo.lastCharacterIndex + 1);
+                    // Debug.Log("TIKOMA CHECK: \"" + tikomaChecker + "\" at index: " + currentwInfo.lastCharacterIndex + 1);
 
-                currentTikomaErrorCount++;
-                articleText.ForceMeshUpdate();
+                    EraseChar();
+
+                    currentTikomaErrorCount++;
+                    articleText.ForceMeshUpdate();
+
+                }
 
             }
+
             if (i == articleText.textInfo.wordCount - 1 && currentTikomaErrorCount < tikomaErrorCount) i = 0;
             if (currentTikomaErrorCount == tikomaErrorCount) break;
 

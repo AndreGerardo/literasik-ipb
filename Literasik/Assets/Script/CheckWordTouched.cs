@@ -61,7 +61,7 @@ public class CheckWordTouched : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             float deltapos = Vector3.Distance(lastMousePos, Input.mousePosition);
-            if (deltapos < deltaTouchErrorMagnitude) PickWord(Input.mousePosition);
+            if (deltapos < deltaTouchErrorMagnitude && canTouch) PickWord(Input.mousePosition);
         }
 
 
@@ -69,7 +69,7 @@ public class CheckWordTouched : MonoBehaviour
         if (Input.touchCount > 0)
         {
             Touch currentTouch = Input.GetTouch(0);
-            if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude)
+            if (currentTouch.phase == TouchPhase.Ended && currentTouch.deltaPosition.magnitude < deltaTouchErrorMagnitude && canTouch)
             {
                 PickWord(currentTouch.position);
             }
@@ -92,7 +92,7 @@ public class CheckWordTouched : MonoBehaviour
 
             TMP_WordInfo wInfo = articleText.textInfo.wordInfo[wordIndex];
 
-            if (EG.textErrorIndexes.Contains(wordIndex) && !wordTouched.Contains(wordIndex) && canTouch)
+            if (EG.textErrorIndexes.Contains(wordIndex) && !wordTouched.Contains(wordIndex))
             {
                 canTouch = false;
                 LM.errorFound++;
@@ -104,8 +104,9 @@ public class CheckWordTouched : MonoBehaviour
                 if (EG.errorTypesIndexes[EG.textErrorIndexes.IndexOf(wordIndex)] == ErrorType.TITIK_KOMA)
                 {
                     // ErrorCorrection(EG.articleErrorTextArray[wordIndex], wordIndex);
-                    string currentWord = EG.articleTextArray[wordIndex];
-                    int tokenPosition = (currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',')) + wInfo.firstCharacterIndex;
+                    // string currentWord = EG.articleTextArray[wordIndex];
+                    // int tokenPosition = (currentWord.Contains(".") ? currentWord.IndexOf('.') : currentWord.IndexOf(',')) + wInfo.firstCharacterIndex;
+                    int tokenPosition = wInfo.lastCharacterIndex + 1;
                     EG.eraseCharList.Remove(tokenPosition);
                     EG.undoEraseCharList.Add(tokenPosition);
                     articleText.ForceMeshUpdate();
