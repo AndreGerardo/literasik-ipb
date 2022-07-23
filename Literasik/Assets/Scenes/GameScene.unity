@@ -3879,7 +3879,7 @@ MonoBehaviour:
   selectedWord: -1
   EG: {fileID: 1672232063}
   LM: {fileID: 1672232065}
-  deltaTouchErrorMagnitude: 0.5
+  deltaTouchErrorMagnitude: 0.15
   correctionPanel: {fileID: 1003298331}
   errorTypeText: {fileID: 2034584599}
   correctionText: {fileID: 2009908965}

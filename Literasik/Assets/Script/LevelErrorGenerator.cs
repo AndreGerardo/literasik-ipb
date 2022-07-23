@@ -148,17 +148,22 @@ public class LevelErrorGenerator : MonoBehaviour
             TMP_WordInfo currentwInfo = articleText.textInfo.wordInfo[i];
             if (currentwInfo.characterCount > 4 && rdm > 1f - typoErrorRate && !typoIgnoreWordList.Contains(currentwInfo.GetWord()) && !textErrorIndexes.Contains(i))
             {
-                //Debug.Log("Error Generated at : " + currentwInfo.GetWord());
-                correctTextIndexs.Add(currentwInfo.GetWord());
-                textErrorIndexes.Add(i);
-                errorTypesIndexes.Add(ErrorType.TYPO);
-
-                //Error Algorithm
                 int charSelect = Random.Range(currentwInfo.firstCharacterIndex + 1, currentwInfo.lastCharacterIndex);
-                char temp = articleText.text[charSelect];
-                sb[charSelect] = articleText.text[charSelect + 1];
-                sb[charSelect + 1] = temp;
-                currentTypoErrorCount++;
+
+                if (sb[charSelect] != articleText.text[charSelect + 1])
+                {
+                    //Debug.Log("Error Generated at : " + currentwInfo.GetWord());
+                    correctTextIndexs.Add(currentwInfo.GetWord());
+                    textErrorIndexes.Add(i);
+                    errorTypesIndexes.Add(ErrorType.TYPO);
+
+                    //Error Algorithm
+                    char temp = articleText.text[charSelect];
+                    sb[charSelect] = articleText.text[charSelect + 1];
+                    sb[charSelect + 1] = temp;
+                    currentTypoErrorCount++;
+                }
+
             }
 
             if (i == articleText.textInfo.wordCount - 1 && currentTypoErrorCount < typoErrorCount) i = 0;
