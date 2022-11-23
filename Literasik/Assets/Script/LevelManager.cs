@@ -33,6 +33,9 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private TMP_Text endTitleText;
     [SerializeField] private GameObject endCardGroup;
 
+    public AudioSource BGMusicSource;
+    public AudioClip[] BGMusics;
+
 
     private void Start()
     {
@@ -67,6 +70,9 @@ public class LevelManager : MonoBehaviour
 
         timeRemaining = 120f;
 
+        BGMusicSource.clip = BGMusics[1];
+        BGMusicSource.Play();
+
         //isPlaying = true;
     }
 
@@ -96,6 +102,9 @@ public class LevelManager : MonoBehaviour
         endTitleText.text = EG.articleTitle.text;
         endErrorText.text = _errorFound + "/" + errorCount;
         // endTitleText.text = "\"" + EG
+
+        BGMusicSource.clip = BGMusics[0];
+        BGMusicSource.Play();
     }
 
     private void DisplayTime(float timeToDisplay)

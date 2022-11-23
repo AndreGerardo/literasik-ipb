@@ -19,11 +19,18 @@ public class CheckWordTouched : MonoBehaviour
     Vector3 lastMousePos;
     [Header("Correction Reference")]
     [SerializeField] private CanvasGroup correctionPanel;
+    [SerializeField] private CanvasGroup penaltyPanel;
     [SerializeField] private TMP_Text errorTypeText, correctionText;
     bool canTouch = true;
     private AudioSource correctionAudio;
     [SerializeField] private AudioClip[] correctionSounds;
     private Camera cam;
+
+    private float _notificationTime = 1f;
+    public void NotificationTime(float time)
+    {
+        _notificationTime = time;
+    }
 
     // void OnEnable()
     // {
@@ -138,6 +145,9 @@ public class CheckWordTouched : MonoBehaviour
                 // Mengoutput kata yang terambil beserta indeksnya ke console
                 Debug.Log("Clicked Text : " + wInfo.GetWord() + ", at index : " + wordIndex);
 
+                canTouch = false;
+                PenaltyFeedbackPrompt();
+
                 //Kurangi waktu
                 LM.timeRemaining -= 5f;
 
@@ -200,7 +210,17 @@ public class CheckWordTouched : MonoBehaviour
         LeanTween.alphaCanvas(correctionPanel, 1f, 0.5f)
             .setEaseInOutSine();
         LeanTween.alphaCanvas(correctionPanel, 0f, 0.5f)
-            .setDelay(1.5f)
+            .setDelay(_notificationTime)
+            .setEaseInOutSine()
+            .setOnComplete(() => canTouch = true);
+    }
+
+    private void PenaltyFeedbackPrompt()
+    {
+        LeanTween.alphaCanvas(penaltyPanel, 1f, 0.5f)
+            .setEaseInOutSine();
+        LeanTween.alphaCanvas(penaltyPanel, 0f, 0.5f)
+            .setDelay(1f)
             .setEaseInOutSine()
             .setOnComplete(() => canTouch = true);
     }
