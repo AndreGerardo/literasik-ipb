@@ -26,7 +26,7 @@ public class CheckWordTouched : MonoBehaviour
     [SerializeField] private AudioClip[] correctionSounds;
     private Camera cam;
 
-    private float _notificationTime = 1f;
+    private float _notificationTime = 2f;
     public void NotificationTime(float time)
     {
         _notificationTime = time;
